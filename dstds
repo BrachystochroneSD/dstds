@@ -19,7 +19,7 @@ check_for_file () {
 
 server_update () {
     check_for_file "$steamcmd"
-    ./steamcmd.sh +force_install_dir "$install_dir" +login anonymous +app_update 343050 validate +quit
+    "$steamcmd" +force_install_dir "$install_dir" +login anonymous +app_update 343050 validate +quit
 }
 
 server_start () {

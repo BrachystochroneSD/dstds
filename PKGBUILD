@@ -2,7 +2,7 @@
 
 pkgname=dstds
 _dstuser=dstds
-pkgver=1.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc="Dedicated server for Don't Starve Together"
 arch=('x86_64')
@@ -28,7 +28,7 @@ source=(
     "dstds"
 )
 sha256sums=(
-    "5de8345ce86ef874add204c4b9848f426e0680b5f4619aceb54b0738f6a4db31"
+    "01ba9c28044380a8ebce0807d0eb36fd40175c77b8b918e77b853ae86887407f"
 )
 
 # prepare() {

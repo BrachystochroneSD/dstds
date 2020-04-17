@@ -28,8 +28,9 @@ source=(
     "dstds"
 )
 sha256sums=(
-    "01ba9c28044380a8ebce0807d0eb36fd40175c77b8b918e77b853ae86887407f"
+    "522950de97108d5995f15f81b9d6ddfaed7be5843b5ba5ba61a8e5e688b5151d"
 )
+
 
 # prepare() {
 # }

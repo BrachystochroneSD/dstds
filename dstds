@@ -8,6 +8,7 @@ SCREEN_SESSION="DSTDS"
 
 fail () {
     echo Error: "$@" >&2
+    echo "Don't forget to install the server in https://accounts.klei.com/login"
     exit 1
 }
 

@@ -1,6 +1,6 @@
 pkgbase = dstds
 	pkgdesc = Dedicated server for Don't Starve Together
-	pkgver = 1.0
+	pkgver = 1.0.1
 	pkgrel = 1
 	arch = x86_64
 	depends = lib32-gcc-libs
@@ -18,9 +18,10 @@ pkgbase = dstds
 	depends = lib32-libtasn1
 	depends = lib32-gmp
 	depends = lib32-libffi
+	depends = screen
 	depends = steamcmd
 	source = dstds
-	sha256sums = 5de8345ce86ef874add204c4b9848f426e0680b5f4619aceb54b0738f6a4db31
+	sha256sums = c1554992f12aa97a39cd9a01f2181004db5728d2cdb57a9d9f6118e44d619a48
 
 pkgname = dstds
 

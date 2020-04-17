@@ -22,13 +22,14 @@ depends=(
     'lib32-libtasn1'
     'lib32-gmp'
     'lib32-libffi'
+    'screen'
     'steamcmd'
 )
 source=(
     "dstds"
 )
 sha256sums=(
-    "522950de97108d5995f15f81b9d6ddfaed7be5843b5ba5ba61a8e5e688b5151d"
+    "c1554992f12aa97a39cd9a01f2181004db5728d2cdb57a9d9f6118e44d619a48"
 )
 
 

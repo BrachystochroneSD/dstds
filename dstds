@@ -1,0 +1,91 @@
+#!/bin/bash
+
+steamcmd_dir="$HOME/.steam/steamcmd/"
+install_dir="$HOME/.steam/steam/steamapps/common/Don't Starve Together Dedicated Server"
+cluster_name="MyDediServer"
+dontstarve_dir="$HOME/.klei/DoNotStarveTogether"
+SCREEN_SESSION="DSTDS"
+
+fail () {
+    echo Error: "$@" >&2
+    exit 1
+}
+
+check_for_file () {
+    if [ ! -e "$1" ]; then
+        fail "Missing file: $1"
+    fi
+}
+
+server_update () {
+    cd "$steamcmd_dir" || fail "Missing $steamcmd_dir directory!"
+    check_for_file "steamcmd.sh"
+    ./steamcmd.sh +force_install_dir "$install_dir" +login anonymous +app_update 343050 validate +quit
+}
+
+server_start () {
+    check_for_file "$dontstarve_dir/$cluster_name/cluster.ini"
+    check_for_file "$dontstarve_dir/$cluster_name/cluster_token.txt"
+    check_for_file "$dontstarve_dir/$cluster_name/Master/server.ini"
+    check_for_file "$dontstarve_dir/$cluster_name/Caves/server.ini"
+    check_for_file "$install_dir/bin"
+    run_shared=(./dontstarve_dedicated_server_nullrenderer)
+    run_shared+=(-console)
+    run_shared+=(-cluster "$cluster_name")
+    run_shared+=(-monitor_parent_process '$$')
+    server_command="${run_shared[@]} -shard Caves | sed 's/^/Caves:  /' & ${run_shared[@]} -shard Master | sed 's/^/Master: /'"
+    if [ "$1" = "--raw" ] ;then
+        server_update
+        cd "$install_dir"/bin || fail
+        /usr/bin/bash -c "$server_command"
+    else
+        [ "$1" = "--update" ] && server_update
+        if screen -S "$SCREEN_SESSION" -Q select . > /dev/null ; then
+            echo "Server already running in screen session $SCREEN_SESSION"
+        else
+            cd "$install_dir"/bin || fail
+            screen -dmS "$SCREEN_SESSION" /usr/bin/bash -c "$server_command"
+        fi
+    fi
+}
+
+server_console () {
+    if screen -S "$SCREEN_SESSION" -Q select . > /dev/null ; then
+        screen -r "$SCREEN_SESSION"
+    else
+        echo "Server is not running or not in a screen session"
+    fi
+}
+
+server_stop () {
+    if screen -S "$SCREEN_SESSION" -Q select . > /dev/null ; then
+        screen -S "$SCREEN_SESSION" -X stuff "^C"
+    else
+        echo "Server is not running or not in a screen session"
+    fi
+}
+
+help () {
+    cat <<EOF
+    Options:
+        start (--update)
+        stop
+        update
+        console
+EOF
+}
+
+case "$1" in
+    start)
+        server_start "$2" ;;
+    stop)
+        server_stop ;;
+    update)
+        server_update ;;
+    console)
+        server_console ;;
+    raw-launch)
+        server_start --raw ;;
+    *)
+        help ; exit 1 ;;
+ esac

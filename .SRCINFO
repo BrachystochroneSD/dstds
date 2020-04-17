@@ -1,0 +1,26 @@
+pkgbase = dstds
+	pkgdesc = Dedicated server for Don't Starve Together
+	pkgver = 1.0
+	pkgrel = 1
+	arch = x86_64
+	depends = lib32-gcc-libs
+	depends = lib32-libcurl-gnutls
+	depends = lib32-glibc
+	depends = lib32-libidn2
+	depends = lib32-libssh2
+	depends = lib32-libpsl
+	depends = lib32-nettle
+	depends = lib32-gnutls
+	depends = lib32-zlib
+	depends = lib32-libunistring
+	depends = lib32-openssl
+	depends = lib32-p11-kit
+	depends = lib32-libtasn1
+	depends = lib32-gmp
+	depends = lib32-libffi
+	depends = steamcmd
+	source = dstds
+	sha256sums = 5de8345ce86ef874add204c4b9848f426e0680b5f4619aceb54b0738f6a4db31
+
+pkgname = dstds
+

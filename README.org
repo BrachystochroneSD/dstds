@@ -1,4 +1,4 @@
-* DSTDS: Don't Starve Together Dedicated Sever AUR Package
+* DSTDSAURp: Don't Starve Together Dedicated Server AUR package
 
   This is my little aur package to create a DST dedicated server on Arch based OS.
 ** Main Dependencies:

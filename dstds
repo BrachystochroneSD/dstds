@@ -1,14 +1,14 @@
 #!/bin/bash
 
-steamcmd="/usr/bin/steamcmd"
-install_dir="$HOME/dstds_serv"
-cluster_name="MyDediServer"
-dontstarve_dir="$HOME/.klei/DoNotStarveTogether"
-SCREEN_SESSION="DSTDS"
+STEAMCMD="/usr/bin/steamcmd"
+BIN_DIR="${HOME}/dstds_serv"
+CLUSTER_NAME="MyDediServer"
+CLUSTER_DIR="${HOME}/$CLUSTER_NAME"
+SCREEN_SESSION="DSTDSAUR"
 
 fail () {
     echo Error: "$@" >&2
-    echo "Don't forget to install the server in https://accounts.klei.com/login"
+
     exit 1
 }
 
@@ -19,31 +19,32 @@ check_for_file () {
 }
 
 server_update () {
-    check_for_file "$steamcmd"
-    "$steamcmd" +force_install_dir "$install_dir" +login anonymous +app_update 343050 validate +quit
+    check_for_file "$STEAMCMD"
+    "$STEAMCMD" +force_install_dir "$BIN_DIR" +login anonymous +app_update 343050 validate +quit
 }
 
 server_start () {
-    check_for_file "$dontstarve_dir/$cluster_name/cluster.ini"
-    check_for_file "$dontstarve_dir/$cluster_name/cluster_token.txt"
-    check_for_file "$dontstarve_dir/$cluster_name/Master/server.ini"
-    check_for_file "$dontstarve_dir/$cluster_name/Caves/server.ini"
-    check_for_file "$install_dir/bin"
+    [ ! -e "$CLUSTER_DIR" ] && fail "You need to install the server, check README"
+    check_for_file "$CLUSTER_DIR/cluster.ini"
+    check_for_file "$CLUSTER_DIR/cluster_token.txt"
+    check_for_file "$CLUSTER_DIR/Master/server.ini"
+    check_for_file "$CLUSTER_DIR/Caves/server.ini"
+    check_for_file "$BIN_DIR/bin"
     run_shared=(./dontstarve_dedicated_server_nullrenderer)
     run_shared+=(-console)
-    run_shared+=(-cluster "$cluster_name")
+    run_shared+=(-cluster "$CLUSTER_NAME")
     run_shared+=(-monitor_parent_process '$$')
     server_command="${run_shared[@]} -shard Caves | sed 's/^/Caves:  /' & ${run_shared[@]} -shard Master | sed 's/^/Master: /'"
     if [ "$1" = "--raw" ] ;then
         server_update
-        cd "$install_dir"/bin || fail "No binaries found, launch \"dstds update\""
+        cd "$BIN_DIR"/bin || fail "No binaries found, launch \"dstds update\""
         /usr/bin/bash -c "$server_command"
     else
         [ "$1" = "--update" ] && server_update
         if screen -S "$SCREEN_SESSION" -Q select . > /dev/null ; then
             echo "Server already running in screen session $SCREEN_SESSION"
         else
-            cd "$install_dir"/bin || fail
+            cd "$BIN_DIR"/bin || fail
             screen -dmS "$SCREEN_SESSION" /usr/bin/bash -c "$server_command"
         fi
     fi

@@ -1,3 +1,15 @@
 * DSTDS: Don't Starve Together Dedicated Sever AUR Package
 
   This is my little aur package to create a DST dedicated server on Arch based OS.
+** Main Dependencies:
+   - [[https://wiki.archlinux.org/index.php/GNU_Screen][Screen]]
+   - [[https://aur.archlinux.org/packages/steamcmd/][Steamcmd]] (AUR)
+** Installation
+   First, you need to install [[https://aur.archlinux.org/packages/steamcmd/][Steamcmd]] from AUR repository. Then, just do a =makepkg -sci=
+** Usage:
+   First, you need to install or update the server binaries with the steamcmd.
+   via steamcmd with =dstds update=.
+   It will install the official binaries anonymously to the /$install_dir/ folder (by default /$HOME/dstds_serv/).
+   Finally, if the server files are located to /$dontstarve_dir/ (default: /$HOME/.klei.DoNotStarvetogether/). You can start the server with =dstds start=.
+   *This repository does not create the server files. You still need to go to connect to https://accounts.klei.com/ and create a server, more information [[https://forums.kleientertainment.com/forums/topic/64441-dedicated-server-quick-setup-guide-linux/][here]]*
+   All directory can be configured in /usr/bin/dstds shell script.

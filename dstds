@@ -1,7 +1,7 @@
 #!/bin/bash
 
-steamcmd_dir="$HOME/.steam/steamcmd/"
-install_dir="$HOME/.steam/steam/steamapps/common/Don't Starve Together Dedicated Server"
+steamcmd="/usr/bin/steamcmd"
+install_dir="$HOME/dstds_serv"
 cluster_name="MyDediServer"
 dontstarve_dir="$HOME/.klei/DoNotStarveTogether"
 SCREEN_SESSION="DSTDS"
@@ -18,8 +18,7 @@ check_for_file () {
 }
 
 server_update () {
-    cd "$steamcmd_dir" || fail "Missing $steamcmd_dir directory!"
-    check_for_file "steamcmd.sh"
+    check_for_file "$steamcmd"
     ./steamcmd.sh +force_install_dir "$install_dir" +login anonymous +app_update 343050 validate +quit
 }
 
@@ -36,7 +35,7 @@ server_start () {
     server_command="${run_shared[@]} -shard Caves | sed 's/^/Caves:  /' & ${run_shared[@]} -shard Master | sed 's/^/Master: /'"
     if [ "$1" = "--raw" ] ;then
         server_update
-        cd "$install_dir"/bin || fail
+        cd "$install_dir"/bin || fail "No binaries found, launch \"dstds update\""
         /usr/bin/bash -c "$server_command"
     else
         [ "$1" = "--update" ] && server_update

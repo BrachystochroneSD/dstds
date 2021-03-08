@@ -19,3 +19,5 @@
    *This repository does not create the server files. You still need to go to connect to https://accounts.klei.com/ and create a server, more information [[https://forums.kleientertainment.com/forums/topic/64441-dedicated-server-quick-setup-guide-linux/][here]]*
 
    All path can be configured in /usr/bin/dstds shell script.
+** TODO
+   - dstds.install shit

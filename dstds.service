@@ -1,0 +1,13 @@
+[Unit]
+Description=Don't Starve Dedicated Server
+After=local-fs.target network.target multi-user.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/dstds start
+ExecStop=/usr/bin/dstds stop
+User=dstds
+Group=dstds
+
+[Install]
+WantedBy=multi-user.target

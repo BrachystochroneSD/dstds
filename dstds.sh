@@ -6,10 +6,7 @@ declare -r game="dstds"
 
 # General rule for the variable-naming-schema:
 # Variables in capital letters may be passed through the command line others not.
-# Avoid altering any of those later in the code since they may be readonly (IDLE_SERVER is an exception!)
-
-#TODO:
-# - Check token in conf_dir
+# Avoid altering any of those later in the code since they may be readonly
 
 # You may use this script for any game server of your choice, just alter the config file
 [[ -n "${SERVER_ROOT}" ]]  && declare -r SERVER_ROOT=${SERVER_ROOT}   || SERVER_ROOT="/srv/dstds"
@@ -22,26 +19,11 @@ declare -r game="dstds"
 [[ -n "${MAIN_EXECUTABLE}" ]] && declare -r MAIN_EXECUTABLE=${MAIN_EXECUTABLE} || MAIN_EXECUTABLE="dontstarve_dedicated_server_nullrenderer"
 [[ -n "${SESSION_NAME}" ]] && declare -r SESSION_NAME=${SESSION_NAME} || SESSION_NAME="${game}"
 
-# Command and parameter declaration with which to start the server
-# [[ -n "${SERVER_START_CMD}" ]] && declare -r SERVER_START_CMD=${SERVER_START_CMD} || SERVER_START_CMD="${MAIN_EXECUTABLE} -shard Caves | sed 's/^/Caves:  /' & ${MAIN_EXECUTABLE} -shard Master | sed 's/^/Master: /'"
-
-# ---> NOT USED  for DSTDS
-# System parameters for the control script
-# [[ -n "${IDLE_SERVER}" ]]       && tmp_IDLE_SERVER=${IDLE_SERVER}   || IDLE_SERVER="false"
-# [[ -n "${IDLE_SESSION_NAME}" ]] && declare -r IDLE_SESSION_NAME=${IDLE_SESSION_NAME} || IDLE_SESSION_NAME="idle_server_${SESSION_NAME}"
-# [[ -n "${GAME_PORT}" ]]         && declare -r GAME_PORT=${GAME_PORT}       || GAME_PORT="25565"
-# [[ -n "${CHECK_PLAYER_TIME}" ]] && declare -r CHECK_PLAYER_TIME=${CHECK_PLAYER_TIME} || CHECK_PLAYER_TIME="30"
-# [[ -n "${IDLE_IF_TIME}" ]]      && declare -r IDLE_IF_TIME=${IDLE_IF_TIME} || IDLE_IF_TIME="1200"
-
 # Additional configuration options which only few may need to alter
 [[ -n "${GAME_COMMAND_DUMP}" ]] && declare -r GAME_COMMAND_DUMP=${GAME_COMMAND_DUMP} || GAME_COMMAND_DUMP="/tmp/${myname}_${SESSION_NAME}_command_dump.txt"
 
 # Variables passed over the command line will always override the one from a config file
 source /etc/conf.d/"${game}" 2>/dev/null || >&2 echo "Could not source /etc/conf.d/${game}"
-
-# Preserve the content of IDLE_SERVER without making it readonly
-# [[ -n ${tmp_IDLE_SERVER} ]] && IDLE_SERVER=${tmp_IDLE_SERVER}
-
 
 # Strictly disallow uninitialized Variables
 set -u
@@ -54,15 +36,6 @@ if [[ "$(whoami)" == "${GAME_USER}" ]]; then
 else
     SUDO_CMD="sudo -u ${GAME_USER}"
 fi
-
-# Choose which flavor of netcat is to be used
-# if command -v netcat &> /dev/null; then
-#   NETCAT_CMD="netcat"
-# elif command -v ncat &> /dev/null; then
-#   NETCAT_CMD="ncat"
-# else
-#   NETCAT_CMD=""
-# fi
 
 # Check for sudo rigths
 if [[ "$(${SUDO_CMD} whoami)" != "${GAME_USER}" ]]; then
@@ -87,89 +60,33 @@ game_command() {
 
 # Check whether there are player on the server through list TODO : adapt for don't starve together
 is_player_online() {
+    # TODO
     return 0
     }
-is_player_online2() {
 
-    response="$(sleep_time=0.6 return_stdout=true game_command c_listallplayers())"
-    # Delete leading line and free response string from fancy characters
-    response="$(echo "${response}" | sed -r -e 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})*)?[JKmsuG]//g')"
-    # The list command prints a line containing the usernames after the last occurrence of ": "
-    # and since playernames may not contain this string the clean player-list can easily be retrieved.
-    # Otherwise check the first digit after the last occurrence of "There are". If it is 0 then there
-    # are no players on the server. Should this test fail as well. Assume that a player is online.
-    if [[ $(echo "${response}" | grep ":" | sed -e 's/.*\: //' | tr -d '\n' | wc -c) -le 1 ]]; then
-        # No player is online
-        return 0
-    elif [[ "x$(echo "${response}" | grep "There are" | sed -r -e 's/.*\: //' -e 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/' | tr -d '\n')" == "x0" ]]; then
-        # No player is online
-        return 0
-    else
-        # A player is online (or it could not be determined)
-        return 1
-    fi
-}
-
-# # Check whether the server is visited by a player otherwise shut it down
-# idle_server_daemon() {
-#   # This function is run within a screen session of the GAME_USER therefore SUDO_CMD can be omitted
-#   if [[ "$(whoami)" != "${GAME_USER}" ]]; then
-#       >&2 echo "Somehow this hidden function was not executed by the ${GAME_USER} user."
-#       >&2 echo "This should not have happend. Are you messing around with this script? :P"
-#       exit 22
-#   fi
-
-#   # Time in seconds for which no player was on the server
-#   no_player=0
-
-#   while true; do
-#       echo -e "no_player: ${no_player}s\tcheck_player_time: ${CHECK_PLAYER_TIME}s\tidle_if_time: ${IDLE_IF_TIME}s"
-#       # Retry in ${CHECK_PLAYER_TIME} seconds
-#       sleep ${CHECK_PLAYER_TIME}
-
-#       if screen -S "${SESSION_NAME}" -Q select . > /dev/null; then
-#           # Game server is up and running
-#           if [[ "$(screen -S "${SESSION_NAME}" -ls | sed -n "s/.*${SESSION_NAME}\s\+//gp")" == "(Attached)" ]]; then
-#               # An administrator is connected to the console, pause player checking
-#               echo "An admin is connected to the console. Pause player checking."
-#           # Check for active player
-#           elif SUDO_CMD="" is_player_online; then
-#               # No player was seen on the server through list
-#               no_player=$(( no_player + CHECK_PLAYER_TIME ))
-#               # Stop the game server if no player was active for at least ${IDLE_IF_TIME}
-#               if [[ "${no_player}" -ge "${IDLE_IF_TIME}" ]]; then
-#                   IDLE_SERVER="false" ${myname} stop
-#                   # Wait for game server to go down
-#                   for i in {1..100}; do
-#                       screen -S "${SESSION_NAME}" -Q select . > /dev/null || break
-#                       [[ $i -eq 100 ]] && echo -e "An \e[39;1merror\e[0m occurred while trying to reset the idle_server!"
-#                       sleep 0.1
-#                   done
-#                   # Reset timer and give the player 300 seconds to connect after pinging
-#                   no_player=$(( IDLE_IF_TIME - 300 ))
-#                   # Game server is down, listen on port ${GAME_PORT} for incoming connections
-#                   echo -n "Netcat: "
-#                   ${NETCAT_CMD} -v -l -p ${GAME_PORT} && echo "Netcat caught an connection. The server is coming up again..."
-#                   IDLE_SERVER="false" ${myname} start
-#               fi
-#           else
-#               # Reset timer since there is an active player on the server
-#               no_player=0
-#           fi
-#       else
-#           # Reset timer and give the player 300 seconds to connect after pinging
-#           no_player=$(( IDLE_IF_TIME - 300 ))
-#           # Game server is down, listen on port ${GAME_PORT} for incoming connections
-#           echo -n "Netcat: "
-#           ${NETCAT_CMD} -v -l -p ${GAME_PORT} && echo "Netcat caught an connection. The server is coming up again..."
-#           IDLE_SERVER="false" ${myname} start
-#       fi
-#   done
+# is_player_online2() {
+#     response="$(sleep_time=0.6 return_stdout=true game_command c_listallplayers())"
+#     # Delete leading line and free response string from fancy characters
+#     response="$(echo "${response}" | sed -r -e 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})*)?[JKmsuG]//g')"
+#     # The list command prints a line containing the usernames after the last occurrence of ": "
+#     # and since playernames may not contain this string the clean player-list can easily be retrieved.
+#     # Otherwise check the first digit after the last occurrence of "There are". If it is 0 then there
+#     # are no players on the server. Should this test fail as well. Assume that a player is online.
+#     if [[ $(echo "${response}" | grep ":" | sed -e 's/.*\: //' | tr -d '\n' | wc -c) -le 1 ]]; then
+#         # No player is online
+#         return 0
+#     elif [[ "x$(echo "${response}" | grep "There are" | sed -r -e 's/.*\: //' -e 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/' | tr -d '\n')" == "x0" ]]; then
+#         # No player is online
+#         return 0
+#     else
+#         # A player is online (or it could not be determined)
+#         return 1
+#     fi
 # }
 
 server_update () {
     if ! command -v "steamcmd" &> /dev/null; then
-        >&2 echo "steamcmd binaries needed for update"
+        >&2 echo "steamcmd binaries needed to update"
         exit 11
     fi
     ${SUDO_CMD} steamcmd +login anonymous +force_install_dir "${SERVER_ROOT}" +app_update 343050 validate +quit
@@ -178,13 +95,6 @@ server_update () {
 # Start the server if it is not already running
 server_start() {
     # Start the game server
-
-    # Check if client_token is present
-    # if [ ! -e "${SERVER_ROOT}/Clusters/${CLUSTER_NAME}/cluster_token.txt" ];then
-    #     >&2 echo -e 'Error: cluster_token.txt missing. Your server will not run without a cluster token, check README for more info.'
-    #     exit 12
-    # fi
-
 
     if ${SUDO_CMD} screen -S "${SESSION_NAME}" -Q select . > /dev/null; then
         echo "A screen ${SESSION_NAME} session is already running. Please close it first."
@@ -196,54 +106,12 @@ server_start() {
         ${SUDO_CMD} screen -S "${SESSION_NAME}" -X logfile "${GAME_COMMAND_DUMP}"
         echo -e "\e[39;1m done\e[0m"
     fi
-
-    #   if [[ "${IDLE_SERVER,,}" == "true" ]]; then
-    #       # Check for the availability of the netcat (nc) binaries
-    #       if [[ -z "${NETCAT_CMD}" ]]; then
-    #           >&2 echo "The netcat binaries are needed for suspending an idle server."
-    #           exit 12
-    #       fi
-
-    #       # Start the idle server daemon
-    #       if ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -Q select . > /dev/null; then
-    #           ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -X quit
-    #           # Restart as soon as the idle_server_daemon has shut down completely
-    #           for i in {1..100}; do
-    #               if ! ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -Q select . > /dev/null; then
-    #                   ${SUDO_CMD} screen -dmS "${IDLE_SESSION_NAME}" /bin/bash -c "${myname} idle_server_daemon"
-    #                   break
-    #               fi
-    #               [[ $i -eq 100 ]] && echo -e "An \e[39;1merror\e[0m occurred while trying to reset the idle_server!"
-    #               sleep 0.1
-    #           done
-    #       else
-    #           echo -en "Starting idle server daemon..."
-    #           ${SUDO_CMD} screen -dmS "${IDLE_SESSION_NAME}" /bin/bash -c "${myname} idle_server_daemon"
-    #           echo -e "\e[39;1m done\e[0m"
-    #       fi
-    #   fi
 }
 
 # Stop the server gracefully by saving everything prior and warning the users
 server_stop() {
-    # Quit the idle daemon
-    # if [[ "${IDLE_SERVER,,}" == "true" ]]; then
-    #   # Check for the availability of the netcat (nc) binaries
-    #   if [[ -z "${NETCAT_CMD}" ]]; then
-    #       >&2 echo "The netcat binaries are needed for suspending an idle server."
-    #       exit 12
-    #   fi
-
-    #   if ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -Q select . > /dev/null; then
-    #       echo -en "Stopping idle server daemon..."
-    #       ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -X quit
-    #       echo -e "\e[39;1m done\e[0m"
-    #   else
-    #       echo "The corresponding screen session for ${IDLE_SESSION_NAME} was already dead."
-    #   fi
-    # fi
-
     # Gracefully exit the game server
+
     if ${SUDO_CMD} screen -S "${SESSION_NAME}" -Q select . > /dev/null; then
         # Game server is up and running, gracefully stop the server when there are still active players
 
@@ -281,21 +149,6 @@ server_stop() {
 
 # Print whether the server is running and if so give some information about memory usage and threads
 server_status() {
-    # Print status information about the idle daemon
-    # if [[ "${IDLE_SERVER,,}" == "true" ]]; then
-    #   # Check for the availability of the netcat (nc) binaries
-    #   if [[ -z "${NETCAT_CMD}" ]]; then
-    #       >&2 echo "The netcat binaries are needed for suspending an idle server."
-    #       exit 12
-    #   fi
-
-    #   if ${SUDO_CMD} screen -S "${IDLE_SESSION_NAME}" -Q select . > /dev/null; then
-    #       echo -e "Idle server daemon status:\e[39;1m running\e[0m"
-    #   else
-    #       echo -e "Idle server daemon status:\e[39;1m stopped\e[0m"
-    #   fi
-    # fi
-
     # Print status information for the game server
     if ${SUDO_CMD} screen -S "${SESSION_NAME}" -Q select . > /dev/null; then
         echo -e "Status:\e[39;1m running\e[0m"
@@ -461,7 +314,8 @@ help() {
             command <command>    Run the given command at the ${game} server console
             console              Enter the server console through a screen session
 
-    Copyright (c) Gordian Edenhofer <gordian.edenhofer@gmail.com>
+    Copyright (c) Gordian Edenhofer <gordian.edenhofer@gmail.com> for the core of the script
+                  And Samuel Dawant <samueld@mailo.com> for the transcription into DST dedicated server
 EOF
 }
 
@@ -501,11 +355,6 @@ case "${1:-}" in
     restore)
         backup_restore "${@:2}"
         ;;
-
-    # idle_server_daemon)
-    # # This shall be a hidden function which should only be invoced internally
-    # idle_server_daemon
-    # ;;
 
     -h|--help)
         help

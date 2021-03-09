@@ -6,5 +6,5 @@ post_install() {
 	echo "The world data is stored under ${_server_root} and the server runs as ${_user} user to increase security."
 	echo "Use the ${_game} script under /usr/bin/${_game} to start, stop or backup the server."
 	echo "Adjust the configuration file under /etc/conf.d/${_game} to your liking."
-	echo "For the server to start you have to create a token, see TODO"
+	echo "For the server to start you have to put a cluster_token in the cluster folder."
 }

@@ -1,4 +1,4 @@
-# Maintainer: Samuel D <samuel.dawant@alumni.umons.ac.be>
+# Maintainer: Samuel Dawant <samueld@mailo.com>
 
 pkgname=dstds
 pkgver=1.1.0
@@ -7,8 +7,10 @@ pkgrel=1
 pkgdesc="Dedicated server for Don't Starve Together"
 arch=('x86_64')
 license=("LGPL")
-depends=('lib32-libcurl-gnutls' 'screen' 'steamcmd')
+# makedepends=('steamcmd')
+depends=('steamcmd' 'lib32-libcurl-gnutls' 'screen')
 optdepends=("tar: needed in order to create world backups")
+            # "steamcmd: needed to update the binaries of the dedicated server")
 source=("dstds")
 backup=("etc/conf.d/${pkgname}")
 install="${pkgname}.install"
@@ -33,6 +35,11 @@ sha256sums=('090da6683c18e2d5921671d56d3d2d30e7eef3a68f3d0763c89d10e751ff695b'
             '00837f74e77c1f4381a7758f60948d2ef27f705382a06d5596c2a9b5f682f8a7'
             '3262b1df790edd67c5e8b9897aaf27fef7510ee31706ce001d3604e6b552b9ed')
 
+# prepare() {
+#     mkdir src
+#     steamcmd +login anonymous +force_install_dir "src" +app_update 343050 validate +quit
+# }
+
 package() {
 	install -Dm644 "${_game}.conf" "${pkgdir}/etc/conf.d/${_game}"
 	install -Dm755 "${_game}.sh" "${pkgdir}/usr/bin/${_game}"
@@ -43,9 +50,9 @@ package() {
 	install -Dm644 "${_game}.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/${_game}.conf"
 
 	# Link the log files
-	mkdir -p "${pkgdir}/var/log/"
-	install -dm775 "${pkgdir}/${_server_root}/logs"
-	ln -s "${_server_root}/logs" "${pkgdir}/var/log/${_game}"
+	# mkdir -p "${pkgdir}/var/log/"
+	# install -dm775 "${pkgdir}/${_server_root}/logs"
+	# ln -s "${_server_root}/logs" "${pkgdir}/var/log/${_game}"
 
 	# Give the group write permissions and set user or group ID on execution
 	chmod g+ws "${pkgdir}${_server_root}"

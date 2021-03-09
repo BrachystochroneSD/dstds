@@ -33,7 +33,7 @@ sha256sums=('090da6683c18e2d5921671d56d3d2d30e7eef3a68f3d0763c89d10e751ff695b'
             'af88257bb98fe3f5ed656557c7ed085ae0b89a04580563ddb5baccc8bb0cf691'
             'b6b241c735fa6a68aad012e5c37a2bf956f13532210aef6e605e4eef2ca5796a'
             '00837f74e77c1f4381a7758f60948d2ef27f705382a06d5596c2a9b5f682f8a7'
-            '8856305d07b6090bdc6d05a7b564f2252807e9a56687ec418365615bf160206c')
+            'fd59f32116b8c9cbc93d882bff92cc20dd5d61dbadd09b4e635d74897b9f69aa')
 
 # prepare() {
 #     mkdir src
@@ -50,10 +50,11 @@ package() {
     install -Dm644 "${_game}.tmpfiles" "${pkgdir}/usr/lib/tmpfiles.d/${_game}.conf"
 
     # Link the log files
-    # mkdir -p "${pkgdir}/var/log/"
-    # install -dm775 "${pkgdir}/${_server_root}/logs"
-    # ln -s "${_server_root}/logs" "${pkgdir}/var/log/${_game}"
+    mkdir -p "${pkgdir}/var/log/"
+    install -dm775 "${pkgdir}/${_server_root}/logs"
+    ln -s "${_server_root}/logs" "${pkgdir}/var/log/${_game}"
 
     # Give the group write permissions and set user or group ID on execution
+
     chmod g+ws "${pkgdir}${_server_root}"
 }

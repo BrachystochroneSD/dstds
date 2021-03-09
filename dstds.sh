@@ -12,7 +12,7 @@ declare -r game="dstds"
 [[ -n "${SERVER_ROOT}" ]]  && declare -r SERVER_ROOT=${SERVER_ROOT}   || SERVER_ROOT="/srv/dstds"
 [[ -n "${CLUSTER_NAME}" ]]  && declare -r CLUSTER_NAME=${CLUSTER_NAME}|| CLUSTER_NAME="cluster_default"
 [[ -n "${BACKUP_DEST}" ]]  && declare -r BACKUP_DEST=${BACKUP_DEST}   || BACKUP_DEST="/srv/dstds/backup"
-[[ -n "${BACKUP_PATHS}" ]] && declare -r BACKUP_PATHS=${BACKUP_PATHS} || BACKUP_PATHS="Clusters/${CLUSTER_NAME}/Master Clusters/${CLUSTER_NAME}/Caves"
+[[ -n "${BACKUP_PATHS}" ]] && declare -r BACKUP_PATHS=${BACKUP_PATHS} || BACKUP_PATHS="Clusters/${CLUSTER_NAME}"
 [[ -n "${BACKUP_FLAGS}" ]] && declare -r BACKUP_FLAGS=${BACKUP_FLAGS} || BACKUP_FLAGS="-z"
 [[ -n "${KEEP_BACKUPS}" ]] && declare -r KEEP_BACKUPS=${KEEP_BACKUPS} || KEEP_BACKUPS="10"
 [[ -n "${GAME_USER}" ]]    && declare -r GAME_USER=${GAME_USER}       || GAME_USER="dstds"
@@ -61,7 +61,7 @@ game_command() {
 # Check whether there are player on the server through list TODO : adapt for don't starve together
 is_player_online() {
     # TODO
-    return 0
+    return 1
     }
 
 # is_player_online2() {
@@ -102,7 +102,7 @@ server_start() {
         run_shard="./${MAIN_EXECUTABLE} -persistent_storage_root ${SERVER_ROOT} -conf_dir Clusters -cluster ${CLUSTER_NAME}"
         server_start_cmd="${run_shard} -shard Caves | sed 's/^/Caves:  /' & ${run_shard} -shard Master | sed 's/^/Master: /'"
         echo -en "Starting server..."
-        ${SUDO_CMD} screen -mS "${SESSION_NAME}" /bin/bash -c "cd ${SERVER_ROOT}/bin; ${server_start_cmd}"
+        ${SUDO_CMD} screen -dmS "${SESSION_NAME}" /bin/bash -c "cd ${SERVER_ROOT}/bin; ${server_start_cmd}"
         ${SUDO_CMD} screen -S "${SESSION_NAME}" -X logfile "${GAME_COMMAND_DUMP}"
         echo -e "\e[39;1m done\e[0m"
     fi
@@ -119,7 +119,7 @@ server_stop() {
         if is_player_online; then
             # No player was seen on the server through list
             echo -en "Server is going down..."
-            game_command "c_announce(\"bouh\")"
+            game_command "c_shutdown()"
         else
             # Player(s) were seen on the server through list (or an error occurred)
             # Warning the users through the server console
@@ -130,7 +130,7 @@ server_stop() {
                 echo -n " $(( 10 - i ))"
                 sleep 1
             done
-            game_command "c_announce(\"bouh2\")"
+            game_command "c_shutdown()"
         fi
 
         # Finish as soon as the server has shut down completely

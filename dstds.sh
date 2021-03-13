@@ -61,7 +61,7 @@ game_command() {
 # Check whether there are player on the server through list TODO : adapt for don't starve together
 is_player_online() {
     # TODO
-    return 1
+    return 0
     }
 
 # is_player_online2() {
@@ -95,6 +95,11 @@ server_update () {
 # Start the server if it is not already running
 server_start() {
     # Start the game server
+
+    if ! command -v -p "${SERVER_ROOT}/bin/${MAIN_EXECUTABLE}" &> /dev/null; then
+        >&2 echo "No binaries found use update command to download DST binaries with steamcmd"
+        exit 13
+    fi
 
     if ${SUDO_CMD} screen -S "${SESSION_NAME}" -Q select . > /dev/null; then
         echo "A screen ${SESSION_NAME} session is already running. Please close it first."
